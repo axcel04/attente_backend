@@ -6,7 +6,11 @@ module.exports = (sequelize) => {
     fullName: { type: DataTypes.STRING(255), allowNull: false },
     contact: { type: DataTypes.STRING(250), allowNull: false},
     address: { type: DataTypes.STRING(250), allowNull: false},
-    status: { type: DataTypes.ENUM("en_attente", "appel", "servi", "annulee"), allowNull: false},
+    status: { 
+      type: DataTypes.ENUM("en_attente", "appel", "servi", "annulee"), 
+      allowNull: false,
+      defaultValue: "en_attente"
+    },
     serviceId: {
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,

@@ -6,7 +6,8 @@ module.exports = (sequelize) => {
     fullName: { type: DataTypes.STRING(255), allowNull: false },
     role: {
       type: DataTypes.ENUM("user", "agent", "admin"),
-      allowNull: false
+      allowNull: false,
+      defaultValue: "user"
     },
     email: { type: DataTypes.STRING(250), allowNull: false },
     password: { type: DataTypes.STRING(250), allowNull: false },
@@ -24,7 +25,7 @@ module.exports = (sequelize) => {
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
-  });
+  })
 
-  return User;
-};
+  return User
+}

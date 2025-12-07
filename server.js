@@ -5,8 +5,7 @@ const path = require('path')
 const fs = require('fs')
 
 const { sequelize } = require('./models')
-const postRoutes = require('./routes/posts')
-const messageRoutes = require('./routes/messages')
+const serviceRoutes = require('./routes/service')
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -19,8 +18,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Routes
-app.use('/api/post', postRoutes)
-app.use('/api/message', messageRoutes)
+app.use('/api/service', serviceRoutes)
+app.use('/uploads', express.static(path.join(__dirname, UPLOADS_DIR)))
 
 // Health check
 app.get('/', (req, res) => res.json({ ok: true }))

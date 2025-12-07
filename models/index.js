@@ -16,10 +16,20 @@ const sequelize = new Sequelize(
 
 const db = { sequelize, Sequelize }
 
-// Import models
-const Post = require('./post')(sequelize)
-const Message = require('./message')(sequelize)
+const Service = require('./service')(sequelize)
+const Ticket = require('./ticket')(sequelize)
+const User = require('./user')(sequelize)
 
-db.Post = Post
-db.Message = Message
+db.Service = Service
+db.Ticket = Ticket
+db.User = User
+sequelize.sync({ alter: true })
+
+Ticket.belongsTo(Service, { foreignKey: 'serviceId' })
+Service.hasMany(Ticket, { foreignKey: 'serviceId' })
+
+User.belongsTo(Service, { foreignKey: 'serviceId' })
+Service.hasMany(User, { foreignKey: 'serviceId' })
+
+
 module.exports = db
