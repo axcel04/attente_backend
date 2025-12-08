@@ -1,4 +1,5 @@
 const express = require('express')
+const bcrypt = require('bcryptjs')
 const router = express.Router()
 const { User } = require('../models')
 
@@ -37,18 +38,13 @@ router.post('/create', async (req, res) => {
     if (!fullName || !email || !password)
       return res.status(400).json({ error: 'Missing required field' })
 
-    if (role === "agent" && !serviceId) {
-      return res.status(400).json({ error: "Agents must have a serviceId" })
-    }
-
-    if (["user", "admin"].includes(role) && serviceId) {
-      return res.status(400).json({ error: "Only agents can have serviceId" })
-    }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     const user = await User.create({
       fullName,
       email,
-      password,
+      password: hashedPassword,
       role: role || "user",
       serviceId: serviceId || null
     })
