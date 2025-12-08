@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/create', async (req, res) => {
   try {
     const { fullName, email, password, role, serviceId } = req.body
 
