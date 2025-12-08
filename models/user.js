@@ -14,7 +14,7 @@ module.exports = (sequelize) => {
 
     serviceId: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "service",
         key: "id"

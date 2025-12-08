@@ -1,52 +1,62 @@
 const express = require('express')
 const router = express.Router()
-const multer = require('multer')
-const path = require('path')
 const { User } = require('../models')
-require('dotenv').config()
 
-const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads'
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, UPLOADS_DIR)
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname)
-    const timestamp = Date.now()
-    cb(null, `serv_${timestamp}${ext}`)
-  }
-})
-
-
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
-
-// GET /service - list service
 router.get('/', async (req, res) => {
-  try{
-    const user = await User.findAll({ order: [['created_at', 'DESC']] })
-    res.json(user)
-  }catch(err){
+  try {
+    const users = await User.findAll({ order: [['created_at', 'DESC']] })
+    res.json(users)
+  } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Failed to fetch services' })
+    res.status(500).json({ error: 'Failed to fetch users' })
   }
 })
 
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params
 
-// POST /service - create service (multipart/form-data)
-// router.post('/', upload.single('image'), async (req, res) => {
-   router.post( ()=> { 
-  try{
-    const { fullName, role, email, password, serviceId } = req.body
-    if (!fullName|| !role || !email || !password, !serviceId) return res.status(400).json({ error: 'Tous les champs sont requis.' })
-    // let photoPath = null
-    // if (req.file) {
-    //   photoPath = `uploads/${req.file.filename}`
-    // }
-    const serv = await User.create({ name, description, image: photoPath, created_at: new Date() })
-    res.status(201).json(serv)
-  }catch(err){
+    const user = await User.findByPk(id)
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    res.json(user)
+
+  } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'La création de la publication a échouée.' })
+    res.status(500).json({ error: 'Failed to fetch user' })
+  }
+})
+
+router.post('/', async (req, res) => {
+  try {
+    const { fullName, email, password, role, serviceId } = req.body
+
+    if (!fullName || !email || !password)
+      return res.status(400).json({ error: 'Missing required field' })
+
+    if (role === "agent" && !serviceId) {
+      return res.status(400).json({ error: "Agents must have a serviceId" })
+    }
+
+    if (["user", "admin"].includes(role) && serviceId) {
+      return res.status(400).json({ error: "Only agents can have serviceId" })
+    }
+
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      role: role || "user",
+      serviceId: serviceId || null
+    })
+
+    res.status(201).json(user)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to create user' })
   }
 })
 
