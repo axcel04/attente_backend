@@ -18,6 +18,14 @@ module.exports = (sequelize) => {
         model: "service",
         key: "id"
       }
+    },
+    userId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      references: {
+        model: "user",
+        key: "id"
+      } 
     }
   }, {
     tableName: 'ticket',

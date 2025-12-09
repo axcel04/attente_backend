@@ -27,6 +27,9 @@ sequelize.sync({ alter: true })
 Ticket.belongsTo(Service, { foreignKey: 'serviceId' })
 Service.hasMany(Ticket, { foreignKey: 'serviceId', onDelete: 'CASCADE' })
 
+Ticket.belongsTo(User, { foreignKey: 'userId' })
+User.hasMany(Ticket, { foreignKey: 'userId', onDelete: 'CASCADE' })
+
 User.belongsTo(Service, { foreignKey: 'serviceId' })
 Service.hasMany(User, { foreignKey: 'serviceId', onDelete: 'CASCADE' })
 
