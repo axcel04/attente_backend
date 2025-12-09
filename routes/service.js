@@ -47,6 +47,26 @@ router.post('/', upload.single('image'), async (req, res) => {
     console.error(err)
     res.status(500).json({ error: 'La création de la publication a échouée.' })
   }
+}) 
+
+// PUT /service/:id - update service (multipart/form-data)
+router.put('/:id', upload.single('image'), async (req, res) => {
+  try{
+    const { id } = req.params
+    const { name, description } = req.body
+    if (!name || !description) return res.status(400).json({ error: 'Tous les champs sont requis.' })
+    const serv = await Service.findByPk(id)
+    if (!serv) return res.status(404).json({ error: 'Service non trouvé.' })
+    let photoPath = serv.image
+    if (req.file) {
+      photoPath = `uploads/${req.file.filename}`
+    }
+    await serv.update({ name, description, image: photoPath })
+    res.json(serv)
+  }catch(err){
+    console.error(err)
+    res.status(500).json({ error: "La mise à jour du service a échouée." })
+  }
 })
 
 module.exports = router
