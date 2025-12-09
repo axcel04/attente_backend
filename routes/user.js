@@ -15,6 +15,17 @@ router.get('/', authRequired, requireRole("admin"), async (req, res) => {
   }
 })
 
+// admin get all agents 
+router.get('/agents', authRequired, requireRole("admin"), async (req, res) => {
+  try {
+    const agents = await User.findAll({ where: { role: 'agent' }, order: [['created_at', 'DESC']] })
+    res.json(agents)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch agents' })
+  }
+})
+
 // get connected user
 router.get('/me', authRequired, async (req, res) => {
   const user = await User.findByPk(req.user.id, {
