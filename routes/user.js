@@ -80,4 +80,22 @@ router.post('/create', async (req, res) => {
   }
 })
 
+
+
+// delete user (admin only)
+router.delete('/:id', authRequired, requireRole("admin"), async (req, res) => {
+  const { id } = req.params
+  try {
+    const user = await User.findByPk(id)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    await user.destroy()
+    res.json({ message: 'User deleted successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete user' })
+  }
+})
+
 module.exports = router
