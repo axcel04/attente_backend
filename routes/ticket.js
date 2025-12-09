@@ -1,91 +1,143 @@
-const express = require('express')
-const bcrypt = require('bcryptjs')
-const router = express.Router()
-const { Ticket, User, Service } = require('../models')
-const { authRequired, requireRole } = require('../middlewares/auth')
+const express = require('express');
+const router = express.Router();
+const { Ticket, User, Service } = require('../models');
+const { authRequired, requireRole } = require('../middlewares/auth');
 
-// get all tickets
-router.get('/', async (req, res) => {
+
+// -------------------------------------------------------------
+// 1️⃣ GET tickets by userId + serviceId (MOST SPECIFIC — must come first)
+// -------------------------------------------------------------
+router.get('/service/:serviceId', async (req, res) => {
+  const { serviceId } = req.params;
+
   try {
     const tickets = await Ticket.findAll({
+      where: { serviceId },
       order: [['created_at', 'DESC']],
       include: [
-        {
-          model: Service,
-          attributes: ['id', 'name', 'description'],
-        },
-        {
-        model: User,
-        attributes: ['id', 'fullName', 'email'],
-        }
+        { model: Service, attributes: ['id', 'name', 'description'] },
+        { model: User, attributes: ['id', 'fullName', 'email'] }
       ]
-    })
-    res.json(tickets)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch tickets' })
-  }
-})
+    });
 
-// get ticket by user Id
+    res.json(tickets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tickets' });
+  }
+});
+
+
+
+// -------------------------------------------------------------
+// 2️⃣ GET tickets by userId
+// -------------------------------------------------------------
 router.get('/ticket/:userId', async (req, res) => {
-  const { userId } = req.params
+  const { userId } = req.params;
   try {
     const tickets = await Ticket.findAll({
       where: { userId },
       order: [['created_at', 'DESC']],
       include: [
-        {
-          model: Service,
-          attributes: ['id', 'name', 'description'],
-        },
-        {
-        model: User,
-        attributes: ['id', 'fullName', 'email'],
-        }
+        { model: Service, attributes: ['id', 'name', 'description'] },
+        { model: User, attributes: ['id', 'fullName', 'email'] }
       ]
-    })
-    res.json(tickets)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch tickets' })
-  }
-})
+    });
 
-// get tickets by id and make sure the user owns it or is admin or agent
+    res.json(tickets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tickets' });
+  }
+});
+
+
+// -------------------------------------------------------------
+// 3️⃣ GET tickets by serviceId (renamed to avoid conflicts)
+// -------------------------------------------------------------
+router.get('/service/:serviceId', async (req, res) => {
+  const { serviceId } = req.params;
+  try {
+    const tickets = await Ticket.findAll({
+      where: { serviceId },
+      order: [['created_at', 'DESC']],
+      include: [
+        { model: Service, attributes: ['id', 'name', 'description'] },
+        { model: User, attributes: ['id', 'fullName', 'email'] }
+      ]
+    });
+
+    res.json(tickets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tickets' });
+  }
+});
+
+
+// -------------------------------------------------------------
+// 4️⃣ GET ALL tickets
+// -------------------------------------------------------------
+router.get('/', async (req, res) => {
+  try {
+    const tickets = await Ticket.findAll({
+      order: [['created_at', 'DESC']],
+      include: [
+        { model: Service, attributes: ['id', 'name', 'description'] },
+        { model: User, attributes: ['id', 'fullName', 'email'] }
+      ]
+    });
+
+    res.json(tickets);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch tickets' });
+  }
+});
+
+
+// -------------------------------------------------------------
+// 5️⃣ GET single ticket by ID (must come after others)
+// -------------------------------------------------------------
 router.get('/:id', authRequired, async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
+
   try {
     const ticket = await Ticket.findByPk(id, {
       include: [
-        {
-          model: Service,
-          attributes: ['id', 'name', 'description'],
-        },
-        {
-        model: User,
-        attributes: ['id', 'fullName', 'email'],
-        }
+        { model: Service, attributes: ['id', 'name', 'description'] },
+        { model: User, attributes: ['id', 'fullName', 'email'] }
       ]
-    })
+    });
+
     if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' })
+      return res.status(404).json({ error: 'Ticket not found' });
     }
-    // Check ownership or role
-    if (req.user.role !== "admin" && req.user.role !== "agent" && ticket.userId !== req.user.id) {
-      return res.status(403).json({ error: "You don't have permission to view this ticket" })
+
+    // Ownership / Role check
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'agent' &&
+      ticket.userId !== req.user.id
+    ) {
+      return res.status(403).json({ error: "You don't have permission to view this ticket" });
     }
-    res.json(ticket)
+
+    res.json(ticket);
+
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch ticket' })
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch ticket' });
   }
-})
+});
 
 
-// create ticket
+// -------------------------------------------------------------
+// 6️⃣ Create ticket
+// -------------------------------------------------------------
 router.post('/', async (req, res) => {
-  const { fullName, contact, address, serviceId, userId } = req.body
+  const { fullName, contact, address, serviceId, userId } = req.body;
+
   try {
     const newTicket = await Ticket.create({
       fullName,
@@ -93,48 +145,65 @@ router.post('/', async (req, res) => {
       address,
       serviceId,
       userId
-    })
-    res.status(201).json(newTicket)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to create ticket' })
-  }
-})
+    });
 
-// update ticket status
+    res.status(201).json(newTicket);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create ticket' });
+  }
+});
+
+
+// -------------------------------------------------------------
+// 7️⃣ Update ticket status
+// -------------------------------------------------------------
 router.put('/:id/status', authRequired, async (req, res) => {
-  const { id } = req.params
-  const { status } = req.body
-  try {
-    const ticket = await Ticket.findByPk(id)
-    if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' })
-    }
-    ticket.status = status
-    await ticket.save()
-    res.json(ticket)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to update ticket status' })
-  }
-})
+  const { id } = req.params;
+  const { status } = req.body;
 
-// delete ticket
+  try {
+    const ticket = await Ticket.findByPk(id);
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    ticket.status = status;
+    await ticket.save();
+
+    res.json(ticket);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update ticket status' });
+  }
+});
+
+
+// -------------------------------------------------------------
+// 8️⃣ Delete ticket (Admin only)
+// -------------------------------------------------------------
 router.delete('/:id', authRequired, requireRole(['admin']), async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
+
   try {
-    const ticket = await Ticket.findByPk(id)
+    const ticket = await Ticket.findByPk(id);
+
     if (!ticket) {
-      return res.status(404).json({ error: 'Ticket not found' })
+      return res.status(404).json({ error: 'Ticket not found' });
     }
-    await ticket.destroy()
-    res.json({ message: 'Ticket deleted successfully' })
+
+    await ticket.destroy();
+
+    res.json({ message: 'Ticket deleted successfully' });
+
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to delete ticket' })
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete ticket' });
   }
-})
+});
 
 
-
-module.exports = router
+module.exports = router;
