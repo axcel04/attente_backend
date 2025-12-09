@@ -1,7 +1,7 @@
 const express = require('express')
 const bcrypt = require('bcryptjs')
 const router = express.Router()
-const { User } = require('../models')
+const { User, Service } = require('../models')
 const { authRequired, requireRole } = require('../middlewares/auth')
 
 // get all users from admin
@@ -15,16 +15,26 @@ router.get('/', authRequired, requireRole("admin"), async (req, res) => {
   }
 })
 
-// admin get all agents 
+// admin get all agents with nested services
 router.get('/agents', authRequired, requireRole("admin"), async (req, res) => {
   try {
-    const agents = await User.findAll({ where: { role: 'agent' }, order: [['created_at', 'DESC']] })
-    res.json(agents)
+    const agents = await User.findAll({
+      where: { role: 'agent' },
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          model: Service,
+          attributes: ['id', 'name', 'description'],
+        }
+      ]
+    });
+    res.json(agents);
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Failed to fetch agents' })
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch agents' });
   }
-})
+});
+
 
 // get connected user
 router.get('/me', authRequired, async (req, res) => {
