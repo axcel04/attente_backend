@@ -33,7 +33,7 @@ router.get('/:id', authRequired, async (req, res) => {
 })
 
 
-// create post
+// create user (admin only or register)
 router.post('/create', async (req, res) => {
   try {
     const { fullName, email, password, role, serviceId } = req.body
