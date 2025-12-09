@@ -25,10 +25,10 @@ db.User = User
 sequelize.sync({ alter: true })
 
 Ticket.belongsTo(Service, { foreignKey: 'serviceId' })
-Service.hasMany(Ticket, { foreignKey: 'serviceId' })
+Service.hasMany(Ticket, { foreignKey: 'serviceId', onDelete: 'CASCADE' })
 
 User.belongsTo(Service, { foreignKey: 'serviceId' })
-Service.hasMany(User, { foreignKey: 'serviceId' })
+Service.hasMany(User, { foreignKey: 'serviceId', onDelete: 'CASCADE' })
 
 
 module.exports = db
