@@ -102,7 +102,7 @@ router.post('/', async (req, res) => {
 })
 
 // update ticket status
-router.put('/:id/status', authRequired, requireRole(['admin', 'agent']), async (req, res) => {
+router.put('/:id/status', authRequired, async (req, res) => {
   const { id } = req.params
   const { status } = req.body
   try {
