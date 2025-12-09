@@ -81,6 +81,34 @@ router.post('/create', async (req, res) => {
 })
 
 
+// update user (admin only)
+router.put('/:id', authRequired, requireRole("admin"), async (req, res) => {
+  const { id } = req.params
+  const { fullName, email, password, role, serviceId } = req.body
+  try {
+    const user = await User.findByPk(id)
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Update fields
+    user.fullName = fullName || user.fullName
+    user.email = email || user.email
+    user.role = role || user.role
+    user.serviceId = serviceId || user.serviceId
+
+    // If password is provided, hash it
+    if (password) {
+      user.password = await bcrypt.hash(password, 10)
+    }
+
+    await user.save()
+    res.json(user)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update user' })
+  }
+})
 
 // delete user (admin only)
 router.delete('/:id', authRequired, requireRole("admin"), async (req, res) => {
