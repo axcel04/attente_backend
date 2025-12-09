@@ -4,6 +4,7 @@ const multer = require('multer')
 const path = require('path')
 const { Service } = require('../models')
 require('dotenv').config()
+const { authRequired, requireRole } = require('../middlewares/auth')
 
 const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads'
 const storage = multer.diskStorage({
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
 
 
 // POST /service - create service (multipart/form-data)
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', authRequired, requireRole("admin"), upload.single('image'), async (req, res) => {
   try{
     const { name, description } = req.body
     if (!name || !description) return res.status(400).json({ error: 'Tous les champs sont requis.' })
@@ -50,7 +51,7 @@ router.post('/', upload.single('image'), async (req, res) => {
 }) 
 
 // PUT /service/:id - update service (multipart/form-data)
-router.put('/:id', upload.single('image'), async (req, res) => {
+router.put('/:id',authRequired, requireRole("admin"), upload.single('image'), async (req, res) => {
   try{
     const { id } = req.params
     const { name, description } = req.body
@@ -66,6 +67,20 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }catch(err){
     console.error(err)
     res.status(500).json({ error: "La mise à jour du service a échouée." })
+  }
+})
+
+// delete service
+router.delete('/:id', authRequired, requireRole("admin"),  async (req, res) => {
+  try{
+    const { id } = req.params
+    const serv = await Service.findByPk(id)
+    if (!serv) return res.status(404).json({ error: 'Service non trouvé.' })
+    await serv.destroy()
+    res.json({ message: 'Service supprimé avec succès.' })
+  }catch(err){
+    console.error(err)
+    res.status(500).json({ error: "La suppression du service a échouée." })
   }
 })
 
