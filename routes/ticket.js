@@ -8,7 +8,6 @@ const { authRequired, requireRole } = require('../middlewares/auth')
 router.get('/', async (req, res) => {
   try {
     const tickets = await Ticket.findAll({
-      where: { role: 'agent' },
       order: [['created_at', 'DESC']],
       include: [
         {
