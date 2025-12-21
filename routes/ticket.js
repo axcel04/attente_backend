@@ -50,6 +50,26 @@ router.get('/user/:userId', async (req, res) => {
   }
 })
 
+// get ticket by connected user
+router.get('/me', authRequired, async (req, res) => {
+  const userId = req.user.id
+
+  try {
+    const tickets = await Ticket.findAll({
+      where: { userId },
+      order: [['created_at', 'DESC']],
+      include: [
+        { model: Service, attributes: ['id', 'name'] }
+      ]
+    })
+
+    res.json(tickets)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch tickets' })
+  }
+})
+
 
 // -------------------------------------------------------------
 // GET ALL tickets
