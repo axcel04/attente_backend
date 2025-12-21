@@ -2,7 +2,8 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
-const fs = require('fs')
+const http = require('http')
+const { Server } = require('socket.io')
 
 const { sequelize } = require('./models')
 const serviceRoutes = require('./routes/service')
@@ -10,14 +11,10 @@ const userRoutes = require('./routes/user')
 const authRoutes = require('./routes/auth')
 const ticketRoutes = require('./routes/ticket')
 
-
 const app = express()
 const PORT = process.env.PORT || 4000
 
-// Ensure uploads directory exists
-const UPLOADS_DIR = process.env.UPLOADS_DIR || 'uploads'
-
-app.use(cors());
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -26,20 +23,41 @@ app.use('/api/service', serviceRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/ticket', ticketRoutes)
-app.use('/uploads', express.static(path.join(__dirname, UPLOADS_DIR)))
 
-// Health check
-app.get('/', (req, res) => res.json({ ok: true }))
-app.get('/api', (req, res) => res.json({ message: "API OK" }))
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-async function start(){
-  try{
+// HTTP server
+const server = http.createServer(app)
+
+// Socket.IO
+const io = new Server(server, {
+  cors: { origin: '*' }
+})
+
+// 🔥 REND IO DISPONIBLE PARTOUT
+app.locals.io = io
+
+// Socket logic
+io.on('connection', (socket) => {
+  console.log('User connecté:', socket.id)
+
+  socket.on('joinRoom', (room) => {
+    socket.join(room)
+    console.log(`User rejoint la room ${room}`)
+  })
+})
+
+// Start server
+async function start() {
+  try {
     await sequelize.authenticate()
-    app.listen(PORT, () => console.log(`Backend tourne sur http://localhost:${PORT}`))
-  }catch(err){
-    console.error('Failed to start server', err)
+    server.listen(PORT, () =>
+      console.log(`Backend + Socket OK http://localhost:${PORT}`)
+    )
+  } catch (err) {
+    console.error(err)
     process.exit(1)
   }
 }
 
-start();
+start()

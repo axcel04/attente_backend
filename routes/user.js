@@ -80,7 +80,6 @@ router.post('/create', async (req, res) => {
   }
 })
 
-
 // update user (admin only)
 router.put('/:id', authRequired, requireRole("admin"), async (req, res) => {
   const { id } = req.params
