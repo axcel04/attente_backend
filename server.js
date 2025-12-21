@@ -18,6 +18,15 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+// HTTP server
+const server = http.createServer(app)
+
+// Socket.IO
+const io = new Server(server, {
+  cors: { origin: '*' }
+})
+// 🔥 REND IO DISPONIBLE PARTOUT
+app.locals.io = io
 // Routes
 app.use('/api/service', serviceRoutes)
 app.use('/api/user', userRoutes)
@@ -26,16 +35,6 @@ app.use('/api/ticket', ticketRoutes)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-// HTTP server
-const server = http.createServer(app)
-
-// Socket.IO
-const io = new Server(server, {
-  cors: { origin: '*' }
-})
-
-// 🔥 REND IO DISPONIBLE PARTOUT
-app.locals.io = io
 
 // Socket logic
 io.on('connection', (socket) => {
